@@ -4,6 +4,7 @@ use mysql::{prelude::Queryable, Pool};
 use ipfs_api::IpfsClient;
 use ipns::IpnsClient;
 use serde_json::json;
+use std::env;
 
 struct Config {
     ipfs_url: String,
@@ -17,21 +18,14 @@ impl Config{
     }
 }
 
+fn expect_env(key: &str) -> String{
+    env::var(key).expect(key)
+}
 
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // let config_file_path = Path::new("./config.json"); //path to our config.json
-    // let config = match Config::from_file_path(config_file_path){
-    //     Ok(c) => c,
-    //     Err(e) => eprintln!("Error. Could not retrieved configuration parameters from config.json. Ensure there is config.json in the path")
-    // };
-
-    let pool = mysql::Pool::new(config.mysql_url)?;
-
-    println!("Connecting to {} as {}...", ipfs_api_url, ipfs_api_username);
-
-    let ipfs_client = IpfsClient::from_str(&ipfs_api_url)
-        .unwrap()
-        .with_credentials(ipfs_api_username, ipfs_api_password);
+    let mysql_conn_string = "mysql://user1:PaWnMeNot338273!@localhost:3306/database";
+    let pool = mysql::Pool::new(mysql_conn_string)?;
+    let ipfs_client = IpfsClient::default();
     
     //this is our hypothetical table to be retrieved from our MYSQL connection via 
     let table_name = "Table1";
