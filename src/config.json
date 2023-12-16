@@ -1,0 +1,6 @@
+{
+    "ipfs_url": "http://127.0.0.1:5001",
+    "database_connection_string": "mysql://username:password@localhost:3306/database",
+    "ipns_key": ""
+
+}
