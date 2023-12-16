@@ -6,24 +6,41 @@ use ipns::IpnsClient;
 use serde_json::json;
 use std::env;
 
+/// Config struct
+/// 
+/// This has been deprecated now
+///
+#[deprecated]
 struct Config {
+    /// * ipfs_url
     ipfs_url: String,
+    /// * database_connection_string
     database_connection_string: String,
+    /// * ipns_key
     ipns_key: String,
 }
+
 impl Config{
     pub fn from_file_path<A: AsRef<Path>>(config_path: A) -> Result<Self, std::error::Error>{
         let json_string = std::fs::read_to_string(&config_path)?;
         serde_json
     }
 }
-
+/// retrieve an environment variable
+/// 
+/// # Arguments
+///
+/// * 'key' - envVar key e.g MYSQL_CONNECTION_STRING, IPFS_URL, IPFS_USERNAME etc
+/// 
+/// # Returns
+/// 
+/// String value of Environment Variable
 fn expect_env(key: &str) -> String{
-    env::var(key).expect(key)
+    env::var(key).expect(format!("error finding {}. Ensure you set an environment variable for {}", key, key).as_str())
 }
 
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mysql_conn_string = "mysql://user1:PaWnMeNot338273!@localhost:3306/database";
+    let mysql_conn_string = expect_env("MYSQL_CONNECTION_STRING");
     let pool = mysql::Pool::new(mysql_conn_string)?;
     let ipfs_client = IpfsClient::default();
     
@@ -41,7 +58,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 
-///We extract data about our table rows of data to be hashed
+/// We extract data about our table rows of data to be hashed
+/// 
+/// # Arguments
+/// 
+/// * 'pool' - reference to an open MYSQL connection
+/// * 'table_name' - name of the table to be retrieved
+/// 
+/// # Returns
+/// 
+/// A vector of data in rows
 async fn get_table_data(pool: &Pool, table_name: &str) -> Result<Vec<Vec<Option<String>>>, mysql::Error> {
     let mut conn = pool.get_conn().await?;
     let query = format!("SELECT * FROM {}", table_name);
@@ -53,10 +79,15 @@ async fn get_table_data(pool: &Pool, table_name: &str) -> Result<Vec<Vec<Option<
 
     Ok(rows)
 }
-///this function pushes our hashes to IPFS
-/// @param ipfs - a reference to an IpfsClient
-/// @param data - hashed data to be pushed
-/// @returns Result<String
+/// this function pushes our hashes to IPFS
+/// 
+/// # Arguments
+/// * 'ipfs' - a reference to an IpfsClient
+/// * 'data' - hashed data to be pushed
+/// 
+/// # Returns
+/// 
+/// the hash of the add response
 async fn upload_to_ipfs(ipfs: &IpfsClient, data: Vec<Vec<Option<String>>>) -> Result<String, ipfs_api::IpfsApiError> {
     let mut ipfs_hashes = Vec::new();
 
